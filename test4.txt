@@ -1,0 +1,55 @@
+create table doctors(
+id serial primary key,
+surname varchar(100) not null,
+name varchar(100) not null,
+patronymic varchar(100),
+specialization varchar(100) not null,
+price_reception numeric,
+percentage_of_deduction numeric
+);
+
+create table patients(
+id serial primary key,
+surname varchar(100) not null,
+name varchar(100) not null,
+patronymic varchar(100),
+birth_date date,
+address varchar(100)
+);
+
+create table receptions(
+id serial primary key,
+doctor_id int references doctors(id) on delete cascade,
+patient_id int references patients(id) on delete cascade,
+date_reception date not null,
+summ_reception numeric not null,
+zarplata numeric
+);
+
+
+create or replace function calculate_zp() returns trigger AS $$
+begin
+    new.zarplata := new.summ_reception * ((select percentage_of_deduction / 100 from doctors where id = new.doctor_id)) * 0.87;
+    return new;
+end;
+$$ language plpgsql;
+
+create or replace trigger calculate_zp
+before insert or update ON receptions for each row
+execute function calculate_zp();
+
+
+insert into doctors VALUES 
+(default, 'Ivanov', 'Ivan', 'Ivanovich', 'Therapist', 3000, 20),
+(default, 'Petrov', 'Petr', 'Petrovich', 'Cardiologist', 4000, 25),
+(default, 'Sidorova', 'Anna', 'Vladimirovna', 'Dentist', 5000, 30);
+
+INSERT INTO patients VALUES 
+(default, 'Smirnov', 'Sergey', 'Olegovich', '1985-05-20', 'Moscow, Lenina 10'),
+(default, 'Fedorova', 'Olga', 'Ivanovna', '1990-08-15', 'Saint Petersburg, Nevsky 22'),
+(default, 'Nikolaev', 'Nikolay', 'Alexandrovich', '2000-11-05', 'Kazan, Pushkina 5');
+
+INSERT INTO receptions (doctor_id, patient_id, date_reception, summ_reception) VALUES 
+(1, 1, '2024-11-24', 3000),
+(2, 2, '2024-11-25', 4000),
+(3, 3, '2024-11-26', 5000);
