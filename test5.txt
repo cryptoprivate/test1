@@ -1,0 +1,74 @@
+create table doctors(
+id serial primary key,
+surname varchar(100) not null,
+name varchar(100) not null,
+patronymic varchar(100),
+specialization varchar(100) not null,
+price_reception numeric,
+percentage_of_deduction numeric
+);
+
+create table patients(
+id serial primary key,
+surname varchar(100) not null,
+name varchar(100) not null,
+patronymic varchar(100),
+birth_date date,
+address varchar(100)
+);
+
+create table receptions(
+id serial primary key,
+doctor_id int references doctors(id) on delete cascade,
+patient_id int references patients(id) on delete cascade,
+date_reception date not null,
+zarplata numeric
+);
+
+create or replace function calculate_zp() returns trigger as $$
+begin 
+	new.zarplata = (select price_reception*percentage_of_deduction / 100 * 0.87 from doctors where id = new.doctor_id);
+	return new;
+end
+$$ language plpgsql;
+
+create or replace trigger calculate_zp
+before insert or update on receptions
+for each row execute function calculate_zp();
+
+INSERT INTO doctors VALUES 
+(DEFAULT, 'Иванов', 'Алексей', 'Сергеевич', 'Терапевт', 1500, 50),
+(DEFAULT, 'Петров', 'Максим', 'Иванович', 'Кардиолог', 2000, 60),
+(DEFAULT, 'Сидоров', 'Иван', 'Николаевич', 'Хирург', 3000, 70),
+(DEFAULT, 'Кузнецов', 'Николай', 'Алексеевич', 'Невролог', 1800, 55),
+(DEFAULT, 'Смирнов', 'Дмитрий', 'Анатольевич', 'Офтальмолог', 2200, 65),
+(DEFAULT, 'Попов', 'Сергей', 'Владимирович', 'Педиатр', 1700, 50),
+(DEFAULT, 'Васильев', 'Антон', 'Семенович', 'Дерматолог', 1900, 60),
+(DEFAULT, 'Зайцев', 'Олег', 'Андреевич', 'Эндокринолог', 2500, 75),
+(DEFAULT, 'Волков', 'Григорий', 'Степанович', 'Уролог', 2400, 68),
+(DEFAULT, 'Морозов', 'Андрей', 'Евгеньевич', 'Травматолог', 2600, 72);
+
+INSERT INTO patients VALUES 
+(DEFAULT, 'Крылова', 'Анна', 'Викторовна', '1985-03-15', 'ул. Ленина, д. 10'),
+(DEFAULT, 'Николаев', 'Игорь', 'Сергеевич', '1992-07-25', 'пр. Мира, д. 15'),
+(DEFAULT, 'Соколова', 'Мария', 'Александровна', '2000-01-30', 'ул. Пушкина, д. 8'),
+(DEFAULT, 'Захаров', 'Дмитрий', 'Николаевич', '1988-11-10', 'ул. Чехова, д. 5'),
+(DEFAULT, 'Медведева', 'Ольга', 'Васильевна', '1995-06-18', 'ул. Рубинштейна, д. 12'),
+(DEFAULT, 'Орлов', 'Станислав', 'Петрович', '1983-09-21', 'пр. Космонавтов, д. 7'),
+(DEFAULT, 'Козлова', 'Елена', 'Юрьевна', '1999-02-14', 'ул. Гагарина, д. 20'),
+(DEFAULT, 'Сергеев', 'Александр', 'Георгиевич', '1975-04-11', 'ул. Победы, д. 3'),
+(DEFAULT, 'Федорова', 'Инна', 'Ивановна', '1987-12-05', 'ул. Карла Маркса, д. 6'),
+(DEFAULT, 'Григорьев', 'Константин', 'Аркадьевич', '1990-10-29', 'ул. Школьная, д. 2');
+
+INSERT INTO receptions VALUES 
+(DEFAULT, 1, 1, '2024-11-25'),
+(DEFAULT, 2, 2, '2024-11-26'),
+(DEFAULT, 3, 3, '2024-11-27'),
+(DEFAULT, 4, 4, '2024-11-28'),
+(DEFAULT, 5, 5, '2024-11-29'),
+(DEFAULT, 6, 6, '2024-12-01'),
+(DEFAULT, 7, 7, '2024-12-02'),
+(DEFAULT, 8, 8, '2024-12-03'),
+(DEFAULT, 9, 9, '2024-12-04'),
+(DEFAULT, 10, 10, '2024-12-05');
+
